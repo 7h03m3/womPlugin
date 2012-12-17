@@ -1,0 +1,8 @@
+name: LumoriaTestPlugin
+main: ch.worldofminecraft.bukkit.test.womTestPlugin
+version: 0.0.0.0
+
+commands:
+    testPlugin:
+        description: this is the description
+        usage: this is the usage
