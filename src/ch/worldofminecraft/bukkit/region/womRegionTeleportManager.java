@@ -123,6 +123,21 @@ public class womRegionTeleportManager {
 	}
 	
 	/************************************************************
+	 * linkTeleportPlayer()
+	 ************************************************************/
+	public boolean linkTeleportPlayer(String nameFrom, String nameTo, String namePlayer)
+	{
+		womRegionTeleport objFrom = this.getRegion(nameFrom);
+		womRegionTeleport objTo = this.getRegion(nameTo);
+		
+		if((objFrom != null) && (objTo != null)) { 
+			this.getRegion(nameFrom).setDestinationTeleportPlayer(namePlayer, this.getRegion(nameTo));
+			return true;
+		}
+		return false;
+	}
+	
+	/************************************************************
 	 * isInsideRegion()
 	 ************************************************************/
 	public boolean isInsideRegion(Location loc) {
