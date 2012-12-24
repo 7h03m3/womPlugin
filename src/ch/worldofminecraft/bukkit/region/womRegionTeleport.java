@@ -1,14 +1,17 @@
 package ch.worldofminecraft.bukkit.region;
 
+import java.util.HashMap;
+
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 public class womRegionTeleport extends womRegion {
 	
+	private boolean active;
 	private Location arriveLoc = null;
 	private womRegionTeleport dstTeleport = null;
-	private boolean active;
-
+	private HashMap<String, womRegionTeleport> dstTeleportPlayer = new HashMap<String, womRegionTeleport>();
+	
 	/************************************************************
 	 * Constructor
 	 ************************************************************/
@@ -27,7 +30,7 @@ public class womRegionTeleport extends womRegion {
 	/************************************************************
 	 * isDestinationTeleportSet()
 	 ************************************************************/
-	public boolean isDestinationTeleport() {
+	public boolean isDestinationTeleportSet() {
 		if(this.dstTeleport != null) {
 			return true;
 		}
@@ -39,6 +42,55 @@ public class womRegionTeleport extends womRegion {
 	 ************************************************************/
 	public womRegionTeleport getDestinationTeleport() {
 		return this.dstTeleport;
+	}
+	
+	/************************************************************
+	 * setDestinationTeleportPlayer()
+	 ************************************************************/
+	public boolean setDestinationTeleportPlayer(String playerName, womRegionTeleport teleport) {
+		if(this.isDestinationTeleportPlayerSet(playerName) == true) 
+			return false;
+		if(teleport == null)
+			return false;
+		
+		this.dstTeleportPlayer.put(playerName, teleport);
+		
+		return true;
+	}
+	
+	/************************************************************
+	 * isDestinationTeleportPlayerSet()
+	 ************************************************************/
+	public boolean isDestinationTeleportPlayerSet(String playerName) {
+		return this.dstTeleportPlayer.containsKey(playerName);
+	}
+	
+	/************************************************************
+	 * getDestinationTeleportPlayer()
+	 ************************************************************/
+	public womRegionTeleport getDestinationTeleportPlayer(String playerName) {
+		if(this.isDestinationTeleportPlayerSet(playerName) == true) {
+			return this.dstTeleportPlayer.get(playerName);
+		}
+		return null;
+	}
+
+	/************************************************************
+	 * removeDestinationTeleport()
+	 ************************************************************/
+	public void removeDestinationTeleport(womRegionTeleport teleport) {
+		womRegionTeleport teleportTmp;
+		for( String name: this.dstTeleportPlayer.keySet() ) {
+			teleportTmp = this.dstTeleportPlayer.get(name);
+			if(teleportTmp.equals(teleport) == true) {
+				this.dstTeleportPlayer.remove(name);
+			}
+		}
+		
+		if(this.dstTeleport.equals(teleport) == true) {
+			this.dstTeleport = null;
+			this.setInactive();
+		}
 	}
 	
 	/************************************************************
@@ -78,7 +130,7 @@ public class womRegionTeleport extends womRegion {
 	public boolean setActive() {
 		if(this.isRegionSet() == false) 
 			return false;
-		if(this.isDestinationTeleport() == false)
+		if(this.isDestinationTeleportSet() == false)
 			return false;
 		if(this.dstTeleport.isArrivePositionSet() == false)
 			return false;
@@ -110,6 +162,27 @@ public class womRegionTeleport extends womRegion {
 		if(player.isOnline() == false) 
 			return false;
 		
-		return player.teleport(this.dstTeleport.arriveLoc);
+		String playerName = player.getName();
+		womRegionTeleport teleport;
+		
+		// player specific teleport
+		if(this.isDestinationTeleportPlayerSet(playerName) == true) {
+			teleport = this.dstTeleportPlayer.get(playerName);
+		
+			if(teleport.isArrivePositionSet() == true) {
+				return player.teleport(teleport.getArrivePosition());
+			}
+		} 
+		
+		// default teleport
+		if(this.isDestinationTeleportSet() == true) {
+			teleport = this.getDestinationTeleport();
+			
+			if(teleport.isArrivePositionSet() == true) {
+				return player.teleport(teleport.getArrivePosition());
+			}
+		}
+		
+		return false;
 	}
 }
