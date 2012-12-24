@@ -1,5 +1,7 @@
 package ch.worldofminecraft.bukkit.commands;
 
+import java.util.HashMap;
+
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.command.Command;
@@ -42,7 +44,9 @@ public class womCommandTeleport {
 			} else if(args[1].equals("setRegion")) {
 				this.setRegion(player, cmd, label, args, pos1, pos2);
 			} else if(args[1].equals("link")) {
-				this.link(player, cmd, label, args);
+				this.linkTeleport(player, cmd, label, args);
+			} else if(args[1].equals("linkPlayer")) {
+				this.linkTeleportPlayer(player, cmd, label, args);
 			} else if(args[1].equals("setArrivePos")) {
 				this.setArrivePosition(player, cmd, label, args, pos1);
 			} else if(args[1].equals("activate")) {
@@ -97,6 +101,16 @@ public class womCommandTeleport {
 					tmpStr = "none";
 				}
 				this.chat.info(player, "Arrive Position : "+tmpStr);
+				
+				HashMap<String, womRegionTeleport> dstTeleportPlayer = teleport.getDestinationTeleportPlayerHashMap();
+				
+				if(dstTeleportPlayer.isEmpty() == false) {
+					tmpStr = "Player Teleport : ";
+					for ( String name: dstTeleportPlayer.keySet() ) {
+						this.chat.info(player, tmpStr+name+" => "+dstTeleportPlayer.get(name).getName());	
+						tmpStr = "                  ";
+					}
+				}
 				
 				this.chat.separator(player);
 			} else {
@@ -183,14 +197,29 @@ public class womCommandTeleport {
 	}
 	
 	/************************************************************
-	 * link()
+	 * linkTeleport()
 	 ************************************************************/
-	private void link(Player player, Command cmd, String label, String[] args) {
+	private void linkTeleport(Player player, Command cmd, String label, String[] args) {
 		if(args.length == 4) {
 			if(this.plugin.regionManager.linkTeleport(args[2], args[3]) == true) {
 				this.chat.info(player, "Teleport "+args[2]+" linked with "+args[3]);
 			} else {
 				this.chat.error(player, "Teleport "+args[2]+" could not linked with "+args[3]);
+			}
+		} else {
+			this.chat.error(player, "Amount of arguments does not match");
+		}
+	}
+	
+	/************************************************************
+	 * linkTeleportPlayer()
+	 ************************************************************/
+	private void linkTeleportPlayer(Player player, Command cmd, String label, String[] args) {
+		if(args.length == 5) {
+			if(this.plugin.regionManager.linkTeleportPlayer(args[2], args[3], args[4]) == true) {
+				this.chat.info(player, "Teleport "+args[2]+" linked with "+args[3]+" for "+args[4]);
+			} else {
+				this.chat.error(player, "Teleport "+args[2]+" could not linked with "+args[3]+" for "+args[4]);
 			}
 		} else {
 			this.chat.error(player, "Amount of arguments does not match");
