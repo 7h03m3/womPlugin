@@ -19,6 +19,13 @@ public class womRegionTeleport extends womRegion {
 		super(name);
 		this.active = false;
 	}
+
+	/************************************************************
+	 * getDestinationTeleportPlayerHashMap
+	 ************************************************************/
+	public HashMap<String, womRegionTeleport> getDestinationTeleportPlayerHashMap() {
+		return this.dstTeleportPlayer;
+	}
 	
 	/************************************************************
 	 * setDestinationTeleport()
@@ -78,18 +85,32 @@ public class womRegionTeleport extends womRegion {
 	/************************************************************
 	 * removeDestinationTeleport()
 	 ************************************************************/
-	public void removeDestinationTeleport(womRegionTeleport teleport) {
+	public void removeDestinationTeleport() {	
+		this.dstTeleport = null;
+		this.setInactive();
+	}
+
+	/************************************************************
+	 * removeDestinationTeleportPlayer()
+	 ************************************************************/
+	public void removeDestinationTeleportPlayer(String playerName) {
+		this.dstTeleportPlayer.remove(playerName);
+	}
+	
+	/************************************************************
+	 * cleanupDestinationTeleport()
+	 ************************************************************/
+	public void cleanupDestinationTeleport(womRegionTeleport teleport) {
 		womRegionTeleport teleportTmp;
 		for( String name: this.dstTeleportPlayer.keySet() ) {
 			teleportTmp = this.dstTeleportPlayer.get(name);
 			if(teleportTmp.equals(teleport) == true) {
-				this.dstTeleportPlayer.remove(name);
+				this.removeDestinationTeleportPlayer(name);
 			}
 		}
 		
 		if(this.dstTeleport.equals(teleport) == true) {
-			this.dstTeleport = null;
-			this.setInactive();
+			this.removeDestinationTeleport();
 		}
 	}
 	
