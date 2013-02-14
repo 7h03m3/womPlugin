@@ -6,14 +6,23 @@ import org.bukkit.entity.Player;
 public class womTeleport {
 	
 	private boolean active;
+	private String name;
 	private Location destination = null;
 
 	/************************************************************
 	 * Constructor
 	 ************************************************************/
-	public womTeleport(Location destination) {
+	public womTeleport(String name, Location destination) {
 		this.destination = destination;
 		this.active = false;
+		this.name = name;
+	}
+	
+	/************************************************************
+	 * getName()
+	 ************************************************************/
+	public String getName() {
+		return this.name;
 	}
 	
 	/************************************************************
@@ -59,9 +68,9 @@ public class womTeleport {
 	 * teleport()
 	 ************************************************************/
 	public boolean teleport(Player player) {
-		if(this.isActive() == false) 
+		if(this.isActive() == false)
 			return false;
-		if(player.isOnline() == false) 
+		if(player.isOnline() == false)
 			return false;
 		
 		return player.teleport(this.destination);

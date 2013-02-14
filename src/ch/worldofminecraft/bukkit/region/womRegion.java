@@ -47,6 +47,20 @@ public class womRegion {
 	}
 	
 	/************************************************************
+	 * getEdge1()
+	 ************************************************************/
+	public Location getEdge1() {
+		return new Location(this.world, this.x1, this.y1, this.z1);
+	}
+	
+	/************************************************************
+	 * getEdge2()
+	 ************************************************************/
+	public Location getEdge2() {
+		return new Location(this.world, this.x2, this.y2, this.z2);
+	}
+	
+	/************************************************************
 	 * isRegionSet()
 	 ************************************************************/
 	public boolean isRegionSet() {		

@@ -1,6 +1,7 @@
 package ch.worldofminecraft.bukkit.listeners;
 
 import org.bukkit.Location;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.*;
@@ -41,5 +42,21 @@ public class womPlayerListener implements Listener {
 				
 			} 
 		}
+	}
+	
+	/************************************************************
+	 * onPlayerLogin()
+	 ************************************************************/
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onPlayerLogin(PlayerLoginEvent event) {
+		this.plugin.playerManager.setOnline(event.getPlayer());
+	}
+	
+	/************************************************************
+	 * onPlayerQuit()
+	 ************************************************************/
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onPlayerQuit(PlayerQuitEvent event) {
+		this.plugin.playerManager.setOffline(event.getPlayer());
 	}
 }

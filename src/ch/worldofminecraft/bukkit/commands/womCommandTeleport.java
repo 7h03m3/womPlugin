@@ -25,36 +25,49 @@ public class womCommandTeleport {
 	}
 	
 	/************************************************************
+	 * commandList()
+	 ************************************************************/
+	public void commandList(Player player) {
+		this.chat.info(player, "list");
+		this.chat.info(player, "create");
+		this.chat.info(player, "remove");
+		this.chat.info(player, "link");
+		this.chat.info(player, "linkPlayer");
+		this.chat.info(player, "setArriveLocation");
+		this.chat.info(player, "activate");
+		this.chat.info(player, "deactivate");
+	}
+	
+	/************************************************************
 	 * commandHandler()
 	 ************************************************************/
 	public void commandHandler(CommandSender sender, Command cmd, String label, String[] args, Location pos1, Location pos2) {
 		Player player = (Player) sender;
 		
 		if(args.length < 2) {
-			this.chat.info(player, "Show command list");
+			this.commandList(player);
 		} else {
 			if(args[1].equals("list")) {
 				this.list(player, cmd, label, args);
 			} else if(args[1].equals("info")) {
 				this.info(player, cmd, label, args);
 			} else if(args[1].equals("create")) {
-				this.create(player, cmd, label, args);
+				this.create(player, cmd, label, args, pos1, pos2);
 			} else if(args[1].equals("remove")) {
 				this.remove(player, cmd, label, args);
-			} else if(args[1].equals("setRegion")) {
-				this.setRegion(player, cmd, label, args, pos1, pos2);
 			} else if(args[1].equals("link")) {
-				this.linkTeleport(player, cmd, label, args);
+				this.linkRegion(player, cmd, label, args);
 			} else if(args[1].equals("linkPlayer")) {
-				this.linkTeleportPlayer(player, cmd, label, args);
-			} else if(args[1].equals("setArrivePos")) {
-				this.setArrivePosition(player, cmd, label, args, pos1);
+				this.linkRegionPlayer(player, cmd, label, args);
+			} else if(args[1].equals("setArriveLocation")) {
+				this.setArriveLocation(player, cmd, label, args, pos1);
 			} else if(args[1].equals("activate")) {
 				this.activate(player, cmd, label, args);
 			} else if(args[1].equals("deactivate")) {
 				this.deactivate(player, cmd, label, args);
 			} else {
 				this.chat.error(player, "unkown command");
+				this.commandList(player);
 			}
 		}
 	}
@@ -63,13 +76,13 @@ public class womCommandTeleport {
 	 * list()
 	 ************************************************************/
 	private void list(Player player, Command cmd, String label, String[] args) {	
-		String listStr = "Teleport list : ";
-		womRegionTeleport[] array = this.plugin.regionManager.getRegionArray();
+		String listStr = "Teleport region list : ";
+		String[] array = this.plugin.regionManager.getRegionNames();
 		
 		for(int i=0 ; i<array.length-1 ; i++) {
-			listStr = listStr + array[i].getName() + ", ";
+			listStr = listStr + array[i] + ", ";
 		}
-		listStr = listStr + array[array.length-1].getName();
+		listStr = listStr + array[array.length-1];
 		
 		this.chat.info(player, listStr);
 	}
@@ -79,21 +92,28 @@ public class womCommandTeleport {
 	 ************************************************************/
 	private void info(Player player, Command cmd, String label, String[] args) {
 		if(args.length == 3) {
-			womRegionTeleport teleport = this.plugin.regionManager.getRegion(args[2]);
-			if(teleport != null) {
+			if(this.plugin.regionManager.isRegionExist(args[2])) {
+				womRegionTeleport teleport = this.plugin.regionManager.getRegion(args[2]);
 				String tmpStr;
-				Location loc = teleport.getArrivePosition();
-				womRegionTeleport dstTeleport = teleport.getDestinationTeleport();
+				Location loc = teleport.getArriveLocation();
+				womRegionTeleport dstTeleport = teleport.getDestinationRegion();
 				
 				this.chat.separator(player);
-				this.chat.info(player, "Name              : "+args[2]);
+				this.chat.info(player, "Name : "+teleport.getName());
+				
+				if(teleport.isActive()) {
+					tmpStr = "enabled";
+				} else {
+					tmpStr = "disabled";
+				}
+				this.chat.info(player, "Status : "+tmpStr);
 				
 				if(dstTeleport != null) {
 					tmpStr = dstTeleport.getName();
 				} else {
 					tmpStr = "none";
 				}
-				this.chat.info(player, "Destination      : "+tmpStr);
+				this.chat.info(player, "Destination : "+tmpStr);
 				
 				if(loc != null) {
 					tmpStr = "x="+loc.getBlockX()+" y="+loc.getBlockY()+" z="+loc.getBlockZ();
@@ -102,7 +122,7 @@ public class womCommandTeleport {
 				}
 				this.chat.info(player, "Arrive Position : "+tmpStr);
 				
-				HashMap<String, womRegionTeleport> dstTeleportPlayer = teleport.getDestinationTeleportPlayerHashMap();
+				HashMap<String, womRegionTeleport> dstTeleportPlayer = teleport.getDestinationRegionPlayerHashMap();
 				
 				if(dstTeleportPlayer.isEmpty() == false) {
 					tmpStr = "Player Teleport : ";
@@ -124,9 +144,14 @@ public class womCommandTeleport {
 	/************************************************************
 	 * create()
 	 ************************************************************/
-	private void create(Player player, Command cmd, String label, String[] args) {
+	private void create(Player player, Command cmd, String label, String[] args, Location edge1, Location edge2) {
 		if(args.length == 3) {
-			if(this.plugin.regionManager.addRegion(args[2]) != null) {
+			if(edge1 == null) 
+				this.chat.error(player, "Position 1 is not set");			
+			if(edge2 == null) 
+				this.chat.error(player, "Position 2 is not set");
+			
+			if(this.plugin.regionManager.addRegion(args[2], edge1, edge2) != null) {
 				this.chat.info(player, "Teleport region \""+args[2]+"\" created");
 			} else {
 				this.chat.error(player, "Could not create teleport region \""+args[2]+"\"");
@@ -141,33 +166,8 @@ public class womCommandTeleport {
 	 ************************************************************/
 	private void remove(Player player, Command cmd, String label, String[] args) {
 		if(args.length == 3) {
-			if(this.plugin.regionManager.removeRegion(args[2])) {
-				this.chat.info(player, "Teleport region \""+args[2]+"\" removed");
-			} else {
-				this.chat.error(player, "Could not remove teleport region \""+args[2]+"\"");
-			}
-		} else {
-			this.chat.error(player, "Amount of arguments does not match");
-		}
-	}
-	
-	/************************************************************
-	 * setRegion()
-	 ************************************************************/
-	private void setRegion(Player player, Command cmd, String label, String[] args, Location edge1, Location edge2) {
-		if(args.length == 3) {
-			if(edge1 == null) 
-				this.chat.error(player, "Position 1 is not set");			
-			if(edge2 == null) 
-				this.chat.error(player, "Position 2 is not set");
-			
-			womRegionTeleport teleportTmp = this.plugin.regionManager.getRegion(args[2]);
-			if(teleportTmp != null) {
-				teleportTmp.setRegion(edge1, edge2);
-				this.chat.info(player, "Teleport region set");
-			} else {
-				this.chat.error(player, "Teleport region does not exist");
-			}
+			this.plugin.regionManager.removeRegion(args[2]);
+			this.chat.info(player, "Teleport region \""+args[2]+"\" removed");
 		} else {
 			this.chat.error(player, "Amount of arguments does not match");
 		}
@@ -176,14 +176,13 @@ public class womCommandTeleport {
 	/************************************************************
 	 * setArrivePosition()
 	 ************************************************************/
-	private void setArrivePosition(Player player, Command cmd, String label, String[] args, Location loc1) {
+	private void setArriveLocation(Player player, Command cmd, String label, String[] args, Location loc1) {
 		if(args.length == 3) {
 			if(loc1 == null) 
 				this.chat.error(player, "Position 1 is not set");			
 			
-			womRegionTeleport teleportTmp = this.plugin.regionManager.getRegion(args[2]);
-			if(teleportTmp != null) {
-				if(teleportTmp.setArrivePosition(loc1) == true) {
+			if(this.plugin.regionManager.isRegionExist(args[2]) == true) { 
+				if(this.plugin.regionManager.setArriveLocation(args[2], loc1) == true) {
 					this.chat.info(player, "Arrive position set");
 				} else {
 					this.chat.error(player, "Could not set arrive position");	
@@ -199,9 +198,9 @@ public class womCommandTeleport {
 	/************************************************************
 	 * linkTeleport()
 	 ************************************************************/
-	private void linkTeleport(Player player, Command cmd, String label, String[] args) {
+	private void linkRegion(Player player, Command cmd, String label, String[] args) {
 		if(args.length == 4) {
-			if(this.plugin.regionManager.linkTeleport(args[2], args[3]) == true) {
+			if(this.plugin.regionManager.linkRegion(args[2], args[3]) == true) {
 				this.chat.info(player, "Teleport "+args[2]+" linked with "+args[3]);
 			} else {
 				this.chat.error(player, "Teleport "+args[2]+" could not linked with "+args[3]);
@@ -214,9 +213,9 @@ public class womCommandTeleport {
 	/************************************************************
 	 * linkTeleportPlayer()
 	 ************************************************************/
-	private void linkTeleportPlayer(Player player, Command cmd, String label, String[] args) {
+	private void linkRegionPlayer(Player player, Command cmd, String label, String[] args) {
 		if(args.length == 5) {
-			if(this.plugin.regionManager.linkTeleportPlayer(args[2], args[3], args[4]) == true) {
+			if(this.plugin.regionManager.linkRegionPlayer(args[2], args[3], args[4]) == true) {
 				this.chat.info(player, "Teleport "+args[2]+" linked with "+args[3]+" for "+args[4]);
 			} else {
 				this.chat.error(player, "Teleport "+args[2]+" could not linked with "+args[3]+" for "+args[4]);
@@ -231,9 +230,7 @@ public class womCommandTeleport {
 	 ************************************************************/
 	private void activate(Player player, Command cmd, String label, String[] args) {
 		if(args.length == 3) {
-			womRegionTeleport teleportTmp = this.plugin.regionManager.getRegion(args[2]);
-			
-			if(teleportTmp.setActive() == true) {
+			if(this.plugin.regionManager.activate(args[2]) == true) {
 				this.chat.info(player, "Teleport region activated");
 			} else {
 				this.chat.error(player, "Could not activate teleport region");
@@ -248,9 +245,7 @@ public class womCommandTeleport {
 	 ************************************************************/
 	private void deactivate(Player player, Command cmd, String label, String[] args) {
 		if(args.length == 3) {
-			womRegionTeleport teleportTmp = this.plugin.regionManager.getRegion(args[2]);
-			
-			teleportTmp.setInactive();
+			this.plugin.regionManager.deactivate(args[2]);
 			this.chat.info(player, "Teleport region deactivated");
 		} else {
 			this.chat.error(player, "Amount of arguments does not match");

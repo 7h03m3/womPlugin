@@ -5,12 +5,14 @@ import java.util.HashMap;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
+import ch.worldofminecraft.bukkit.teleport.womTeleport;
+
 public class womRegionTeleport extends womRegion {
 	
 	private boolean active;
-	private Location arriveLoc = null;
-	private womRegionTeleport dstTeleport = null;
-	private HashMap<String, womRegionTeleport> dstTeleportPlayer = new HashMap<String, womRegionTeleport>();
+	private womTeleport arriveTeleport = null;
+	private womRegionTeleport destinationRegion = null;
+	private HashMap<String, womRegionTeleport> destinationRegionPlayer = new HashMap<String, womRegionTeleport>();
 	
 	/************************************************************
 	 * Constructor
@@ -19,152 +21,146 @@ public class womRegionTeleport extends womRegion {
 		super(name);
 		this.active = false;
 	}
-
+	
 	/************************************************************
-	 * getDestinationTeleportPlayerHashMap
+	 * setDestinationRegion()
 	 ************************************************************/
-	public HashMap<String, womRegionTeleport> getDestinationTeleportPlayerHashMap() {
-		return this.dstTeleportPlayer;
+	public void setDestinationRegion(womRegionTeleport dst) {
+		this.destinationRegion = dst;
 	}
 	
 	/************************************************************
-	 * setDestinationTeleport()
+	 * isDestinationRegionSet()
 	 ************************************************************/
-	public void setDestinationTeleport(womRegionTeleport dst) {
-		this.dstTeleport = dst;
-	}
-	
-	/************************************************************
-	 * isDestinationTeleportSet()
-	 ************************************************************/
-	public boolean isDestinationTeleportSet() {
-		if(this.dstTeleport != null) {
+	public boolean isDestinationRegionSet() {
+		if(this.destinationRegion != null) {
 			return true;
 		}
 		return false;
 	}
 	
 	/************************************************************
-	 * getDestinationTeleport()
+	 * getDestinationRegion()
 	 ************************************************************/
-	public womRegionTeleport getDestinationTeleport() {
-		return this.dstTeleport;
-	}
-	
-	/************************************************************
-	 * setDestinationTeleportPlayer()
-	 ************************************************************/
-	public boolean setDestinationTeleportPlayer(String playerName, womRegionTeleport teleport) {
-		if(this.isDestinationTeleportPlayerSet(playerName) == true) 
-			return false;
-		if(teleport == null)
-			return false;
-		
-		this.dstTeleportPlayer.put(playerName, teleport);
-		
-		return true;
-	}
-	
-	/************************************************************
-	 * isDestinationTeleportPlayerSet()
-	 ************************************************************/
-	public boolean isDestinationTeleportPlayerSet(String playerName) {
-		return this.dstTeleportPlayer.containsKey(playerName);
-	}
-	
-	/************************************************************
-	 * getDestinationTeleportPlayer()
-	 ************************************************************/
-	public womRegionTeleport getDestinationTeleportPlayer(String playerName) {
-		if(this.isDestinationTeleportPlayerSet(playerName) == true) {
-			return this.dstTeleportPlayer.get(playerName);
-		}
-		return null;
+	public womRegionTeleport getDestinationRegion() {
+		return this.destinationRegion;
 	}
 
 	/************************************************************
-	 * removeDestinationTeleport()
+	 * removeDestinationRegion()
 	 ************************************************************/
-	public void removeDestinationTeleport() {	
-		this.dstTeleport = null;
-		this.setInactive();
-	}
-
-	/************************************************************
-	 * removeDestinationTeleportPlayer()
-	 ************************************************************/
-	public void removeDestinationTeleportPlayer(String playerName) {
-		this.dstTeleportPlayer.remove(playerName);
+	public void removeDestinationRegion() {	
+		this.destinationRegion = null;
+		this.deactivate();
 	}
 	
 	/************************************************************
-	 * cleanupDestinationTeleport()
+	 * setArriveLocation()
 	 ************************************************************/
-	public void cleanupDestinationTeleport(womRegionTeleport teleport) {
-		womRegionTeleport teleportTmp;
-		for( String name: this.dstTeleportPlayer.keySet() ) {
-			teleportTmp = this.dstTeleportPlayer.get(name);
-			if(teleportTmp.equals(teleport) == true) {
-				this.removeDestinationTeleportPlayer(name);
-			}
-		}
-		
-		if(this.dstTeleport.equals(teleport) == true) {
-			this.removeDestinationTeleport();
-		}
-	}
-	
-	/************************************************************
-	 * setArrivePosition()
-	 ************************************************************/
-	public boolean setArrivePosition(Location dst) {
+	public boolean setArriveLocation(Location dst) {
 		if(this.isRegionSet() == false)
 			return false;
 		if(this.isInsideRegion(dst) == true)
 			return false;
 
-		this.arriveLoc = dst;
+		this.arriveTeleport = new womTeleport(this.getName(),dst);
+		this.arriveTeleport.activate();
 		
 		return true;
 	}
 	
 	/************************************************************
-	 * getArrivePosition()
+	 * getArriveLocation()
 	 ************************************************************/
-	public Location getArrivePosition() {
-		return this.arriveLoc;
+	public Location getArriveLocation() {
+		if(this.arriveTeleport != null) {
+			return this.arriveTeleport.getDestination();
+		}
+		return null;
 	}
 	
 	/************************************************************
-	 * isArrivePositionSet()
+	 * getArriveTeleport()
 	 ************************************************************/
-	public boolean isArrivePositionSet() {
-		if(this.arriveLoc != null) {
+	public womTeleport getArriveTeleport() {
+		return this.arriveTeleport;
+	}
+	
+	/************************************************************
+	 * isArriveTeleportSet()
+	 ************************************************************/
+	public boolean isArriveTeleportSet() {
+		if(this.arriveTeleport != null) {
 			return true;
 		}
 		return false;
 	}
 	
 	/************************************************************
-	 * setActive
+	 * isDestinationRegionPlayerSet()
 	 ************************************************************/
-	public boolean setActive() {
-		if(this.isRegionSet() == false) 
-			return false;
-		if(this.isDestinationTeleportSet() == false)
-			return false;
-		if(this.dstTeleport.isArrivePositionSet() == false)
-			return false;
-			
-		this.active = true;
-		return true;
+	public boolean isDestinationRegionPlayerSet(String playerName) {
+		return this.destinationRegionPlayer.containsKey(playerName);
 	}
 	
 	/************************************************************
-	 * setInactive
+	 * isDestinationRegionPlayerEmpty()
 	 ************************************************************/
-	public void setInactive() {
-		this.active = false;
+	public boolean isDestinationRegionPlayerEmpty() {
+		return this.destinationRegionPlayer.isEmpty();
+	}
+	
+	/************************************************************
+	 * setDestinationRegionPlayer()
+	 ************************************************************/
+	public boolean setDestinationRegionPlayer(String playerName, womRegionTeleport teleport) {
+		if(this.isDestinationRegionPlayerSet(playerName) == true) 
+			return false;
+		if(teleport == null)
+			return false;
+		
+		this.destinationRegionPlayer.put(playerName, teleport);
+		
+		return true;
+	}
+
+	/************************************************************
+	 * getDestinationRegionPlayer()
+	 ************************************************************/
+	public womRegionTeleport getDestinationRegionPlayer(String playerName) {
+		if(this.isDestinationRegionPlayerSet(playerName) == true) {
+			return this.destinationRegionPlayer.get(playerName);
+		}
+		return null;
+	}
+	
+	/************************************************************
+	 * getDestinationRegionPlayerHashMap
+	 ************************************************************/
+	public HashMap<String, womRegionTeleport> getDestinationRegionPlayerHashMap() {
+		return this.destinationRegionPlayer;
+	}
+	
+	/************************************************************
+	 * removeDestinationRegionPlayer()
+	 ************************************************************/
+	public void removeDestinationRegionPlayer(String playerName) {
+		this.destinationRegionPlayer.remove(playerName);
+	}
+	
+	/************************************************************
+	 * cleanupDestinationRegion()
+	 ************************************************************/
+	public void cleanupDestinationRegion(String name) {
+		for( womRegionTeleport teleportTmp: this.destinationRegionPlayer.values() ) {
+			if(teleportTmp.getName().equals(name) == true) {
+				this.removeDestinationRegionPlayer(name);
+			}
+		}
+		
+		if(this.destinationRegion.getName().equals(name) == true) {
+			this.removeDestinationRegion();
+		}
 	}
 	
 	/************************************************************
@@ -175,32 +171,52 @@ public class womRegionTeleport extends womRegion {
 	}
 	
 	/************************************************************
+	 * activate
+	 ************************************************************/
+	public boolean activate() {
+		if(this.isRegionSet() == false) 
+			return false;
+		if(this.isDestinationRegionSet() == false)
+			return false;
+		if(this.destinationRegion.isArriveTeleportSet() == false)
+			return false;
+			
+		this.active = true;
+		return true;
+	}
+	
+	/************************************************************
+	 * deactivate
+	 ************************************************************/
+	public void deactivate() {
+		this.active = false;
+	}
+	
+	/************************************************************
 	 * teleportPlayer()
 	 ************************************************************/
 	public boolean teleportPlayer(Player player) {
-		if(this.isActive() == false) 
-			return false;
-		if(player.isOnline() == false) 
+		if(this.isActive() == false)
 			return false;
 		
 		String playerName = player.getName();
-		womRegionTeleport teleport;
+		womRegionTeleport region;
 		
 		// player specific teleport
-		if(this.isDestinationTeleportPlayerSet(playerName) == true) {
-			teleport = this.dstTeleportPlayer.get(playerName);
+		if(this.isDestinationRegionPlayerSet(playerName) == true) {
+			region = this.destinationRegionPlayer.get(playerName);
 		
-			if(teleport.isArrivePositionSet() == true) {
-				return player.teleport(teleport.getArrivePosition());
+			if(region.isArriveTeleportSet() == true) {
+				return region.arriveTeleport.teleport(player);
 			}
 		} 
 		
 		// default teleport
-		if(this.isDestinationTeleportSet() == true) {
-			teleport = this.getDestinationTeleport();
+		if(this.isDestinationRegionSet() == true) {
+			region = this.getDestinationRegion();
 			
-			if(teleport.isArrivePositionSet() == true) {
-				return player.teleport(teleport.getArrivePosition());
+			if(region.isArriveTeleportSet() == true) {
+				return region.arriveTeleport.teleport(player);
 			}
 		}
 		

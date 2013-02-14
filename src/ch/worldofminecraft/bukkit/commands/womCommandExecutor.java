@@ -12,6 +12,8 @@ public class womCommandExecutor implements CommandExecutor {
 	
 	private womTestPlugin plugin; 
 	private womCommandTeleport cmdTeleport;
+	private womCommandLicense cmdLicense;
+	private womCommandPlayer cmdPlayer;
 	private Location pos1=null, pos2=null;
 	 
 	/************************************************************
@@ -20,6 +22,8 @@ public class womCommandExecutor implements CommandExecutor {
 	public womCommandExecutor(womTestPlugin plugin) {
 		this.plugin = plugin;
 		this.cmdTeleport = new womCommandTeleport(plugin);
+		this.cmdLicense = new womCommandLicense(plugin);
+		this.cmdPlayer = new womCommandPlayer(plugin);
 	}
  
 	/************************************************************
@@ -33,14 +37,6 @@ public class womCommandExecutor implements CommandExecutor {
 	        	   return false;
 	           }
 	           
-	           /* Show arguments */
-	           /*
-	           sender.sendMessage("args.length = "+args.length);
-	           for(int i=0 ; i<args.length ; i++) {
-	        	   sender.sendMessage("args["+i+"] = "+args[i]);   
-	           }
-	           */
-	           
 	           if(args[0].equals("getPos")) {
 	        	   this.getPos(player, cmd, label, args);
 	           } else if(args[0].equals("setPos1")) {
@@ -51,6 +47,10 @@ public class womCommandExecutor implements CommandExecutor {
 	        	   this.resetPos(player, cmd, label, args);
 	           } else if(args[0].equals("teleport")) {
 	        	   this.cmdTeleport.commandHandler(sender, cmd, label, args, this.pos1, this.pos2);
+	           } else if(args[0].equals("license")) {
+	        	   this.cmdLicense.commandHandler(sender, cmd, label, args);
+	           } else if(args[0].equals("player")) {
+	        	   this.cmdPlayer.commandHandler(sender, cmd, label, args);
 	           }
 	           
 	           return true;
